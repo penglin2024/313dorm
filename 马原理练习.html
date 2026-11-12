@@ -294,6 +294,84 @@
     .q-head { font-size: 14.5px; }
     .opt { font-size: 14px; }
   }
+  /* ---------- 章节完成评语弹窗 ---------- */
+  .result-mask {
+    position: fixed; inset: 0; z-index: 900;
+    display: flex; align-items: center; justify-content: center; padding: 18px;
+    background: rgba(17,24,39,.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s;
+  }
+  .result-mask.show { opacity: 1; pointer-events: auto; }
+  .result-card {
+    width: 100%; max-width: 400px;
+    background: #fff; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(15,23,42,.32);
+    transform: translateY(14px) scale(.97);
+    transition: transform .24s cubic-bezier(.2,.9,.3,1.2);
+    text-align: center;
+  }
+  .result-mask.show .result-card { transform: none; }
+  .result-hero { padding: 22px 20px 16px; color: #fff; background: linear-gradient(135deg,#4f46e5,#7c3aed); }
+  .result-mask[data-tier="t1"] .result-hero { background: linear-gradient(135deg,#64748b,#475569); }
+  .result-mask[data-tier="t2"] .result-hero { background: linear-gradient(135deg,#0ea5e9,#4f46e5); }
+  .result-mask[data-tier="t3"] .result-hero { background: linear-gradient(135deg,#4f46e5,#7c3aed); }
+  .result-mask[data-tier="t4"] .result-hero { background: linear-gradient(135deg,#7c3aed,#db2777); }
+  .result-mask[data-tier="t5"] .result-hero { background: linear-gradient(135deg,#f59e0b,#ef4444); }
+  .result-emoji { font-size: 30px; line-height: 1; }
+  .result-pct { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; margin-top: 4px; }
+  .result-pct small { font-size: 17px; font-weight: 700; margin-left: 2px; letter-spacing: 0; }
+  .result-tier { font-size: 13px; opacity: .92; margin-top: 1px; }
+  .result-body { padding: 18px 22px 4px; }
+  .result-tag {
+    display: inline-block; font-size: 15px; font-weight: 800;
+    padding: 5px 14px; border-radius: 999px;
+    background: #eef2ff; color: #4338ca;
+  }
+  .result-mask[data-tier="t5"] .result-tag { background: #fef3c7; color: #b45309; }
+  .result-say { margin: 11px 0 0; font-size: 14.5px; color: #374151; line-height: 1.7; }
+  .result-meta { margin-top: 7px; font-size: 12.5px; color: #9ca3af; }
+  .result-actions { display: flex; gap: 9px; padding: 16px 20px 20px; }
+  .result-actions button {
+    flex: 1; font-family: inherit; font-size: 14px; font-weight: 600;
+    padding: 11px 6px; border-radius: 10px; cursor: pointer;
+    border: 1px solid #e5e7eb; background: #f9fafb; color: #374151;
+    transition: background .15s, border-color .15s, transform .1s;
+  }
+  .result-actions button:hover { background: #f3f4f6; border-color: #d1d5db; }
+  .result-actions button.primary {
+    background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; border-color: transparent;
+    box-shadow: 0 6px 16px rgba(79,70,229,.32);
+  }
+  .result-actions button.primary:hover { filter: brightness(1.06); }
+  .result-actions button:active { transform: translateY(1px); }
+  @media (max-width: 420px) {
+    .result-actions { flex-direction: column; }
+    .result-pct { font-size: 34px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .result-card, .result-mask { transition: none; } }
+
+  /* 底部「查看本章评语」 */
+  .bottom-bar { gap: 10px; flex-wrap: wrap; }
+  #commentBtn {
+    display: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 26px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg,#4f46e5,#7c3aed);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(79,70,229,.3);
+    transition: filter .15s, transform .1s;
+  }
+  #commentBtn:hover { filter: brightness(1.06); }
+  #commentBtn:active { transform: translateY(1px); }
+  #commentBtn.show { display: inline-block; }
 </style>
 </head>
 <body>
@@ -328,7 +406,29 @@
   <main id="quiz"></main>
 
   <div class="bottom-bar">
+    <button id="commentBtn">查看本章评语</button>
     <button id="resetBtn">重新开始本章（打乱题目与选项）</button>
+  </div>
+</div>
+
+<!-- 章节完成评语 -->
+<div class="result-mask" id="resultMask" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="resultTag">
+  <div class="result-card">
+    <div class="result-hero">
+      <div class="result-emoji" id="resultEmoji">🎯</div>
+      <div class="result-pct"><span id="resultPct">0</span><small>%</small></div>
+      <div class="result-tier" id="resultTier">本章已完成</div>
+    </div>
+    <div class="result-body">
+      <div class="result-tag" id="resultTag">评语</div>
+      <p class="result-say" id="resultSay"></p>
+      <div class="result-meta" id="resultMeta"></div>
+    </div>
+    <div class="result-actions">
+      <button id="resultClose">先看看错题</button>
+      <button id="resultRedo">再来一遍</button>
+      <button id="resultNext" class="primary">下一章</button>
+    </div>
   </div>
 </div>
 
@@ -850,6 +950,7 @@ function updateStats() {
   elOk.textContent = ok;
   elBad.textContent = bad;
   elRate.textContent = done === 0 ? '—' : Math.round(ok / done * 100) + '%';
+  updateCommentBtn();
 }
 
 function updateTabsDone() {
@@ -1058,6 +1159,8 @@ function judge(qi, card, optsBox) {
   updateStats();
   updateTabsDone();
   save();
+
+  if (!restoring && chapterIsDone(states)) showResult();
 }
 
 /* ---------- 恢复 ---------- */
@@ -1154,9 +1257,9 @@ function switchChapter(idx) {
 }
 
 /* ---------- 重置当前章节 ---------- */
-function resetCurrentChapter() {
+function resetChapter(skipConfirm) {
   const ch = CHAPTERS[currentIdx];
-  if (!confirm(`确定清空【${ch.name}】所有作答，并重新打乱题目与选项顺序吗？`)) return;
+  if (!skipConfirm && !confirm(`确定清空【${ch.name}】所有作答，并重新打乱题目与选项顺序吗？`)) return;
 
   try { localStorage.removeItem(STORAGE_PREFIX + ch.id); } catch (e) {}
 
@@ -1171,6 +1274,115 @@ function resetCurrentChapter() {
   showToast(`【${ch.name}】已重新开始，题目与选项顺序已打乱`);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+/* ============================================================
+ * 章节完成评语
+ * ============================================================ */
+/* @@TIER_START@@ */
+const COMMENTS = {
+  t1: { emoji: '🫠', tier: '未及格 · 菜就多练', tag: '菜就多练', lines: [
+    '本次尝试未及格，快去多加练习。',
+    '这章的知识还没进脑子，回去再捋一遍。',
+    '及格线都没摸到，先把错题看懂再来。'
+  ] },
+  t2: { emoji: '🙂', tier: '及格 · 稳住别飘', tag: '及格万岁', lines: [
+    '低空掠过，60 分万岁是会上瘾的。',
+    '过了线，但错的那几道说明基础还漏风。',
+    '及格只是及格，别急着发朋友圈。'
+  ] },
+  t3: { emoji: '😎', tier: '良好 · 有点东西', tag: '有点东西，但不多', lines: [
+    '主干抓到了，细节还在漏水。',
+    '离优秀只差临门一脚，抠一下错题就上去了。',
+    '这个分数已经能唬住室友了。'
+  ] },
+  t4: { emoji: '🔥', tier: '优秀 · 差一口气', tag: '就差一口气', lines: [
+    '只差满分，错的那道题正盯着你。',
+    '这水平已经可以带人复习了。',
+    '剩下的都是边角料，下次全收。'
+  ] },
+  t5: { emoji: '🏆', tier: '满分 · 你过关！', tag: '无懈可击', lines: [
+    '全对，本章直接通关。',
+    '一道没漏，建议去给室友讲题。',
+    '满分退场，页面都替你鼓掌了。'
+  ] }
+};
+
+/* 正确率 → 档位：<60 / 60-80 / 80-90 / 90-100 / 100 */
+function pickTier(pct) {
+  if (pct >= 100) return 't5';
+  if (pct >= 90) return 't4';
+  if (pct >= 80) return 't3';
+  if (pct >= 60) return 't2';
+  return 't1';
+}
+
+function rateOf(list) {
+  const total = list.length;
+  const ok = list.filter(s => s.result === true).length;
+  return { total, ok, pct: total ? ok / total * 100 : 0 };
+}
+
+function chapterIsDone(list) {
+  return list.length > 0 && list.every(s => s.result !== null);
+}
+/* @@TIER_END@@ */
+
+const resultMask = document.getElementById('resultMask');
+const commentBtn = document.getElementById('commentBtn');
+
+function updateCommentBtn() {
+  commentBtn.classList.toggle('show', chapterIsDone(states));
+}
+
+function showResult() {
+  const { total, ok, pct } = rateOf(states);
+  const tier = pickTier(pct);
+  const c = COMMENTS[tier];
+  const say = c.lines[Math.floor(Math.random() * c.lines.length)];
+  const shown = Math.floor(pct + 1e-6);
+
+  resultMask.dataset.tier = tier;
+  resultMask.setAttribute('aria-hidden', 'false');
+  document.getElementById('resultEmoji').textContent = c.emoji;
+  document.getElementById('resultPct').textContent = shown;
+  document.getElementById('resultTier').textContent = c.tier;
+  document.getElementById('resultTag').textContent = c.tag;
+  document.getElementById('resultSay').textContent = say;
+  document.getElementById('resultMeta').textContent =
+    `【${CHAPTERS[currentIdx].name}】答对 ${ok}/${total} 题 · 正确率 ${shown}%`;
+  document.getElementById('resultNext').textContent =
+    currentIdx === CHAPTERS.length - 1 ? '回到第一章' : '下一章';
+
+  resultMask.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('resultNext').focus(), 80);
+}
+
+function hideResult() {
+  resultMask.classList.remove('show');
+  resultMask.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('resultClose').addEventListener('click', hideResult);
+document.getElementById('resultNext').addEventListener('click', () => {
+  hideResult();
+  switchChapter((currentIdx + 1) % CHAPTERS.length);
+});
+document.getElementById('resultRedo').addEventListener('click', () => {
+  hideResult();
+  resetChapter(true);
+});
+commentBtn.addEventListener('click', showResult);
+resultMask.addEventListener('click', (e) => {
+  if (e.target === resultMask) hideResult();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && resultMask.classList.contains('show')) hideResult();
+});
+
+/* 供按钮点击使用（保留原有无参形式，避免把 MouseEvent 当成 skipConfirm） */
+function resetCurrentChapter() { resetChapter(false); }
 
 /* ---------- 初始化 ---------- */
 renderTabs();
