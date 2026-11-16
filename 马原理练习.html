@@ -38,6 +38,7 @@
   .back-link:hover { background: rgba(255,255,255,.3); border-color: rgba(255,255,255,.5); transform: translateX(-2px); }
   .back-link svg { width: 13px; height: 13px; flex: none; stroke: currentColor; fill: none; stroke-width: 2.2; }
   .title-area p { margin: 0; font-size: 12px; opacity: .85; }
+  #examCountdown { font-weight: 700; font-size: 13.5px; letter-spacing: .3px; font-variant-numeric: tabular-nums; }
 
   /* ---------- 章节标签栏（不吸附，可横向滚动） ---------- */
   .tabs-bar {
@@ -1384,6 +1385,31 @@ document.addEventListener('keydown', (e) => {
 
 /* 供按钮点击使用（保留原有无参形式，避免把 MouseEvent 当成 skipConfirm） */
 function resetCurrentChapter() { resetChapter(false); }
+
+/* ============================================================
+ * 马原考试倒计时（精确到小时）
+ *   考试日期：2026 年 12 月 24 日 09:00
+ *   要改日期/时间，只改下面这一行的四个数字即可（月份从 0 开始，11 = 12 月）
+ * ============================================================ */
+const EXAM_TIME = new Date(2026, 11, 24, 9, 0, 0);
+
+function formatCountdown(ms) {
+  if (ms <= 0) return '考试已开始';
+  const days = Math.floor(ms / 86400000);
+  const hours = Math.floor((ms % 86400000) / 3600000);
+  if (days > 0) return `${days} 天 ${hours} 小时`;
+  if (hours > 0) return `${hours} 小时`;
+  return '不到 1 小时';
+}
+
+function renderCountdown() {
+  const el = document.getElementById('examCountdown');
+  if (!el) return;
+  el.textContent = formatCountdown(EXAM_TIME.getTime() - Date.now());
+}
+
+renderCountdown();
+setInterval(renderCountdown, 30000);
 
 /* ---------- 初始化 ---------- */
 renderTabs();
